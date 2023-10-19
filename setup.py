@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-import exposedfunctionality
+import envpicker
 
 from pathlib import Path
 
@@ -8,7 +8,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="envpicker",
-    version=exposedfunctionality.__version__,
+    version=envpicker.__version__,
     description="automatic picking of environments",
     long_description=long_description,
     author="Julian Kimmig",
