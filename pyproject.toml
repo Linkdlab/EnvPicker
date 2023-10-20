@@ -19,12 +19,13 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 PyYAML = "*"
+wrapconfig = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
 poetry-bumpversion = "*"
 bump2version = "*"
-wrapconfig = "*"
+
 
 [build-system]
 requires = ["poetry-core"]
