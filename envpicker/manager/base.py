@@ -45,15 +45,19 @@ def is_package_entry(entry: str) -> bool:
     """
     if not isinstance(entry, str):
         return False
-    # forbid any whitespace via regex
-    if re.match(r"\s", entry):
-        return False
-    # forbid any linebreaks via regex
-    if re.match(r"\n", entry):
+    # forbid any whitespace and linebreaks via regex
+    if re.search(r"\s", entry):
         return False
 
     # require version specifier
-    vs = entry.replace("==", "=").split("=")
+
+    vs = (
+        entry.replace(">", "=")
+        .replace("<", "=")
+        .replace("!", "=")
+        .replace("==", "=")
+        .split("=", 1)
+    )
     if len(vs) != 2:
         return False
     e, v = vs
@@ -67,9 +71,10 @@ class BaseEnvManager(ABC):
     def __init__(self, path: Optional[str] = None) -> None:
         super().__init__()
         if not path:
-            path = os.environ.get("ENV_MANAGER_PATH")
-        if not path:
-            path = os.path.join(os.path.expanduser("~"), ".env_manager")
+            path = os.environ.get(
+                "ENV_MANAGER_PATH",
+                os.path.join(os.path.expanduser("~"), ".env_manager"),
+            )
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
         if not os.path.isdir(path):
@@ -143,6 +148,7 @@ class BaseEnvManager(ABC):
         if not os.path.isdir(path):
             raise FileNotFoundError("The path does not exist")
 
+        path = os.path.normpath(os.path.abspath(path))
         if py_executable is None:
             # if windows
             if os.name == "nt":
@@ -180,6 +186,7 @@ class BaseEnvManager(ABC):
         )
         env = None
         env = self.get_env_by_path(path=path)
+        print(env, new_env)
         if env is not None and not force:
             raise EnvExistsError("The environment is already registered")
 

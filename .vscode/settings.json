@@ -18,7 +18,9 @@
     "version patch": "poetry version patch",
     "version minor": "poetry version minor",
     "version major": "poetry version major",
-    "sync": "poetry export --without-hashes -f requirements.txt --output requirements.txt & git add requirements.txt & poetry build & git pull & git push & git push --tags "
+    "sync": "git pull & git push & git push --tags ",
+    "cbw": "echo.>codebase.txt & setlocal enabledelayedexpansion & for /R %f in (*.py) do (set \"relativePath=%f\" & call echo %relativePath:%CD%=.%: & type \"%f\" & echo. & echo. & echo.)>> codebase.txt",
+    "codebase_win": "echo.>codebase.txt & setlocal enabledelayedexpansion &  for /R %f in (*.py) do (set \"relativePath=%f\" & set \"relativePath=!relativePath:%CD%\\=.\\!\" & echo !relativePath! & & type \"%f\" & echo. & echo. & echo.) >> codebase.txt"
   },
 
   "multiCommand.commands": [
