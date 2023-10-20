@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "envpicker"
+version = "0.1.1"
+description = "automatic picking of environments"
+authors = ["Julian Kimmig <julian.kimmig@gmx.net>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/Linkdlab/EnvPicker"
+repository = "https://github.com/Linkdlab/EnvPicker"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9" # Adjust to your Python version
+]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+PyYAML = "*"
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+poetry-bumpversion = "*"
+bump2version = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[[tool.poetry_bumpversion.replacements]]
+files = ["envpicker/__init__.py"]
+
+

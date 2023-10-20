@@ -13,7 +13,12 @@
   "command-runner.terminal.autoFocus": true,
   "command-runner.commands": {
     "coverage": "coverage run & coverage html& coverage lcov & coverage report",
-    "echo file": "echo ${file}"
+    "unify": "poetry export --without-hashes -f requirements.txt --output requirements.txt",
+    "publish": "poetry export --without-hashes -f requirements.txt --output requirements.txt & poetry publish --build",
+    "version patch": "poetry version patch",
+    "version minor": "poetry version minor",
+    "version major": "poetry version major",
+    "sync": "poetry export --without-hashes -f requirements.txt --output requirements.txt & git add requirements.txt & poetry build & git pull & git push & git push --tags "
   },
 
   "multiCommand.commands": [
