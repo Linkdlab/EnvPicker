@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "envpicker"
-version = "0.2.0"
+version = "0.2.1"
 description = "automatic picking of environments"
 authors = ["Julian Kimmig <julian.kimmig@gmx.net>"]
 license = "MIT"
