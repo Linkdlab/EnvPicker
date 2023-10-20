@@ -261,6 +261,22 @@ class BaseEnvManager(ABC):
                 yield env
 
     @staticmethod
+    def stream_process(proc: subprocess.Popen) -> Generator[bytes, None, None]:
+        # Stream the output continuously
+        while True:
+            output = proc.stdout.read1()
+
+            if output:
+                yield output
+            if proc.poll() is not None:
+                break
+        yield b"\n"
+        _, errors = proc.communicate()
+
+        if errors:
+            raise RuntimeError(errors.decode())
+
+    @staticmethod
     def run_py_in_env(env: dict, command: str) -> Generator[bytes, None, None]:
         """
         Calls the Python executable from the specified envirbonment and executes the given command.
@@ -273,26 +289,38 @@ class BaseEnvManager(ABC):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         ) as proc:
-            # Stream the output continuously
-            while True:
-                output = proc.stdout.read1()
-
-                if output:
-                    yield output
-                if proc.poll() is not None:
-                    break
-            yield b"\n"
-            _, errors = proc.communicate()
-
-            if errors:
-                raise RuntimeError(errors.decode())
+            yield from BaseEnvManager.stream_process(proc)
 
     def run_py_in_matching(
         self, required_dependencies: list[str], command: str
-    ) -> Generator[str, None, None]:
+    ) -> Generator[bytes, None, None]:
         """
         Runs the given command in the first matching environment.
         """
         env = next(self.find_matching(required_dependencies))
-        yield f"Running in {env['name']} ({env['path']})"
         yield from self.run_py_in_env(env, command)
+
+    @staticmethod
+    def run_pyfile_in_env(env: dict, path: str) -> Generator[bytes, None, None]:
+        """
+        Calls the Python executable from the specified envirbonment and executes the given command.
+        Yields the output line by line.
+        """
+        py_executable_path = env["py_executable"]
+        path = os.path.abspath(path)
+        # Start the command with the specified Python executable
+        with subprocess.Popen(
+            [py_executable_path, "-u", path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ) as proc:
+            yield from BaseEnvManager.stream_process(proc)
+
+    def run_pyfile_in_matching(
+        self, required_dependencies: list[str], path: str
+    ) -> Generator[bytes, None, None]:
+        """
+        Runs the given command in the first matching environment.
+        """
+        env = next(self.find_matching(required_dependencies))
+        yield from self.run_pyfile_in_env(env, path)
