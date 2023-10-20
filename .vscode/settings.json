@@ -14,7 +14,7 @@
   "command-runner.commands": {
     "coverage": "coverage run & coverage html& coverage lcov & coverage report",
     "unify": "poetry export --without-hashes -f requirements.txt --output requirements.txt",
-    "publish": "poetry export --without-hashes -f requirements.txt --output requirements.txt & poetry publish --build",
+    "publish": "poetry export --without-hashes -f requirements.txt --output requirements.txt & poetry publish --build & for /f \"delims=\" %i in ('poetry version -s') do git tag -a %i -m \"Tagging version %i\"",
     "version patch": "poetry version patch",
     "version minor": "poetry version minor",
     "version major": "poetry version major",

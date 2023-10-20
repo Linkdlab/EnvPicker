@@ -1,15 +1,21 @@
 from __future__ import annotations
-from typing import Optional, TypedDict
+from typing import Optional, TypedDict, Generator
 import os
 from abc import ABC, abstractmethod
 from wrapconfig import YAMLWrapConfig
 import subprocess
 import hashlib
-
+import subprocess
 import yaml
 import re
 
 from ..logger import ENVPICKER_LOGGER
+from ..utils import (
+    split_version,
+    SpecifierSet,
+    matches_version,
+    PackageVersionCondition,
+)
 
 
 class EnvironmentEntry(TypedDict):
@@ -225,3 +231,68 @@ class BaseEnvManager(ABC):
     @abstractmethod
     def get_dependencies(self, env: EnvironmentEntry) -> list[str]:
         """Return the dependencies of the environment"""
+
+    def find_matching(
+        self, required_dependencies: list[str]
+    ) -> Generator[str, None, None]:
+        split_deps: list[PackageVersionCondition] = [
+            split_version(dep) for dep in required_dependencies
+        ]
+        envs = self.environments
+
+        for env in envs:
+            matches = True
+            full_env = self.env_to_full_env(env)
+            packages = full_env["envdata"]["dependencies"]
+            packages = [split_version(dep) for dep in packages]
+            packages = {dep["pkg"].lower(): dep for dep in packages}
+            for required_dep in split_deps:
+                if required_dep["pkg"].lower() not in packages:
+                    matches = False
+                    break
+                if not matches_version(
+                    required_dep["vstring"],
+                    packages[required_dep["pkg"].lower()]["vstring"],
+                ):
+                    matches = False
+                    break
+
+            if matches:
+                yield env
+
+    @staticmethod
+    def run_py_in_env(env: dict, command: str) -> Generator[bytes, None, None]:
+        """
+        Calls the Python executable from the specified envirbonment and executes the given command.
+        Yields the output line by line.
+        """
+        py_executable_path = env["py_executable"]
+        # Start the command with the specified Python executable
+        with subprocess.Popen(
+            [py_executable_path, "-u", "-c", command],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ) as proc:
+            # Stream the output continuously
+            while True:
+                output = proc.stdout.read1()
+
+                if output:
+                    yield output
+                if proc.poll() is not None:
+                    break
+            yield b"\n"
+            _, errors = proc.communicate()
+
+            if errors:
+                raise RuntimeError(errors.decode())
+
+    def run_py_in_matching(
+        self, required_dependencies: list[str], command: str
+    ) -> Generator[str, None, None]:
+        """
+        Runs the given command in the first matching environment.
+        """
+        env = next(self.find_matching(required_dependencies))
+        yield f"Running in {env['name']} ({env['path']})"
+        yield from self.run_py_in_env(env, command)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Optional
 from .conda_mngr import CondaManager, MambaManager
+from .base import BaseEnvManager
 from ..logger import ENVPICKER_LOGGER
 
 PREFERENCE_ORDER = [
@@ -19,7 +20,9 @@ _MANAGER_CLASSES = {
 }
 
 
-def get_manager(path: Optional[str] = None, preferences: Optional[list[str]] = None):
+def get_manager(
+    path: Optional[str] = None, preferences: Optional[list[str]] = None
+) -> BaseEnvManager:
     """Return the first available manager."""
     if preferences is None:
         preferences = PREFERENCE_ORDER
