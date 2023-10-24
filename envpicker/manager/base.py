@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, TypedDict, Generator
+from typing import Optional, TypedDict, Generator, Tuple
 import os
 from abc import ABC, abstractmethod
 from wrapconfig import YAMLWrapConfig
@@ -261,23 +261,27 @@ class BaseEnvManager(ABC):
                 yield env
 
     @staticmethod
-    def stream_process(proc: subprocess.Popen) -> Generator[bytes, None, None]:
+    def stream_process(
+        proc: subprocess.Popen,
+    ) -> Generator[Tuple[bytes, bytes], None, None]:
         # Stream the output continuously
         while True:
-            output = proc.stdout.read1()
-
-            if output:
-                yield output
+            output_stdout = proc.stdout.read1()
+            output_stderr = proc.stderr.read1()
+            if output_stdout or output_stderr:
+                yield output_stdout or b"", output_stderr or b""
             if proc.poll() is not None:
                 break
-        yield b"\n"
+        yield b"\n", b"\n"
         _, errors = proc.communicate()
 
         if errors:
             raise RuntimeError(errors.decode())
 
     @staticmethod
-    def run_py_in_env(env: dict, command: str) -> Generator[bytes, None, None]:
+    def run_py_in_env(
+        env: dict, command: str
+    ) -> Generator[Tuple[bytes, bytes], None, None]:
         """
         Calls the Python executable from the specified envirbonment and executes the given command.
         Yields the output line by line.
@@ -301,7 +305,9 @@ class BaseEnvManager(ABC):
         yield from self.run_py_in_env(env, command)
 
     @staticmethod
-    def run_pyfile_in_env(env: dict, path: str) -> Generator[bytes, None, None]:
+    def run_pyfile_in_env(
+        env: dict, path: str
+    ) -> Generator[Tuple[bytes, bytes], None, None]:
         """
         Calls the Python executable from the specified envirbonment and executes the given command.
         Yields the output line by line.
@@ -318,7 +324,7 @@ class BaseEnvManager(ABC):
 
     def run_pyfile_in_matching(
         self, required_dependencies: list[str], path: str
-    ) -> Generator[bytes, None, None]:
+    ) -> Generator[Tuple[bytes, bytes], None, None]:
         """
         Runs the given command in the first matching environment.
         """
